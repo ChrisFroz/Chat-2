@@ -24,9 +24,9 @@
   </form>
 
   <script>
-    const URL = "https://ipcyuxydqrgxcehblnwx.supabase.co";
+    const URL_SUPABASE = "https://ipcyuxydqrgxcehblnwx.supabase.co";
     const KEY = "sb_publishable_UZXa5xfq6LHxNX-3oahEOA_dch4-m0s";
-    const db = supabase.createClient(URL, KEY);
+    const db = supabase.createClient(URL_SUPABASE, KEY);
 
     let nombre = "";
     while (!nombre) {
@@ -37,7 +37,7 @@
     let ultimoId = 0;
 
     function mostrar(m) {
-      const hora = new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      const hora = new Date(m.created_at).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" });
       const div = document.createElement("div");
       div.className = "msg";
       div.innerHTML = `<span class="hora">[${hora}]</span> <b></b>: <span></span>`;
@@ -49,12 +49,14 @@
     }
 
     async function cargarHistorial() {
-      const { data } = await db.from("mensajes").select("*").order("id", { ascending: false }).limit(20);
+      const { data, error } = await db.from("mensajes").select("*").order("id", { ascending: false }).limit(20);
+      if (error) console.error(error);
       (data || []).reverse().forEach(mostrar);
     }
 
     async function revisarNuevos() {
-      const { data } = await db.from("mensajes").select("*").gt("id", ultimoId).order("id");
+      const { data, error } = await db.from("mensajes").select("*").gt("id", ultimoId).order("id");
+      if (error) console.error(error);
       (data || []).forEach(mostrar);
     }
 
@@ -64,12 +66,12 @@
       const texto = input.value.trim().slice(0, 500);
       if (!texto) return;
       input.value = "";
-      await db.from("mensajes").insert({ autor: nombre, texto: texto });
+      const { error } = await db.from("mensajes").insert({ autor: nombre, texto: texto });
+      if (error) console.error(error);
       revisarNuevos();
     });
 
-    cargarHistorial();
-    setInterval(revisarNuevos, 2000);
+    cargarHistorial().then(() => setInterval(revisarNuevos, 2000));
   </script>
 </body>
 </html>
